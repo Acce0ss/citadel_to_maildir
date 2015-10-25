@@ -1,0 +1,36 @@
+#!/bin/bash
+
+MAILDIR_PATH=/home/citadel/backup/mails/
+
+export PATH=$PATH:.
+
+function get_mails_for_user ()
+{
+  USER_DIR="$MAILDIR_PATH$1"
+  echo "Copying mails for user $1: "
+  ID="$2"
+  GOTO_MAIL=$(printf "GOTO %010d.Mail" "$ID")
+  GOTO_MSENT=$(printf "GOTO %010d.Sent" "$ID")
+
+  if [ "$USER_DIR" ]
+  then
+    mkdir -p $USER_DIR
+    result_for_commands "$GOTO_MAIL" "MSGS ALL" | head -n -1 | tail -n +4 > $USER_DIR/mails
+    for mail in $(cat $USER_DIR/mails)
+    do
+      if ! [ -e $USER_DIR/$mail ]
+      then
+        result_for_commands "$GOTO_MAIL" "MSG2 $mail" | head -n -1 | tail -n +4 > $USER_DIR/$mail
+      fi
+      echo $mail
+    done
+    echo ""
+  fi
+}
+
+LIST=$(result_for_commands "list" | tail -n +3 | head -n -1)
+
+for person in $LIST 
+do
+  get_mails_for_user `echo $person | tr '|' ' ' | awk '{if ($3 != ""){print $1 " " $3}};'`
+done

@@ -1,0 +1,4 @@
+#!/bin/bash
+SOC='socat - UNIX-CONNECT:/var/run/citadel/citadel-admin.socket'
+
+(printf '%s\n' "$@") | eval $SOC
